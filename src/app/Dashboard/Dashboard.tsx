@@ -34,7 +34,6 @@ import {
   sortableKeyboardCoordinates,
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
-import { OpenShiftChatBot } from './ChatBotComponent';
 import { clusterData } from './OpenShiftClusterComponents';
 import { DraggableCard } from './DraggableCard';
 import { WidgetPicker } from './WidgetPicker';
@@ -308,9 +307,6 @@ const Dashboard: React.FunctionComponent = () => {
         isOpen={isAIBuilderOpen}
         onClose={() => setIsAIBuilderOpen(false)}
       />
-
-      {/* OpenShift ChatBot - Floating Assistant */}
-      <OpenShiftChatBot />
     </PageSection>
   );
 };
