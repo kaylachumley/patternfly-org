@@ -1,41 +1,204 @@
 import * as React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
 import {
+  Avatar,
   Button,
+  Dropdown,
+  DropdownItem,
+  DropdownList,
   Masthead,
   MastheadBrand,
+  MastheadContent,
   MastheadLogo,
   MastheadMain,
-  MastheadToggle,
-  Nav,
-  NavExpandable,
-  NavItem,
-  NavList,
+  MenuToggle,
+  MenuToggleElement,
   Page,
-  PageSidebar,
-  PageSidebarBody,
   SkipToContent,
+  Toolbar,
+  ToolbarContent,
+  ToolbarGroup,
+  ToolbarItem,
 } from '@patternfly/react-core';
-import { IAppRoute, IAppRouteGroup, routes } from '@app/routes';
-import { BarsIcon } from '@patternfly/react-icons';
+import { CogIcon, HelpIcon, MoonIcon, SunIcon } from '@patternfly/react-icons';
 
 interface IAppLayout {
   children: React.ReactNode;
 }
 
+type ThemeType = 'default' | 'unified';
+type ColorScheme = 'system' | 'light' | 'dark';
+type ContrastMode = 'system' | 'default' | 'high-contrast' | 'glass';
+
 const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = React.useState(true);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = React.useState(false);
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = React.useState(false);
+
+  const [theme, setTheme] = React.useState<ThemeType>(() => {
+    return (localStorage.getItem('pf-theme') as ThemeType) || 'default';
+  });
+
+  const [colorScheme, setColorScheme] = React.useState<ColorScheme>(() => {
+    return (localStorage.getItem('pf-color-scheme') as ColorScheme) || 'system';
+  });
+
+  const [contrastMode, setContrastMode] = React.useState<ContrastMode>(() => {
+    return (localStorage.getItem('pf-contrast-mode') as ContrastMode) || 'system';
+  });
+
+  // Apply theme classes
+  React.useEffect(() => {
+    const htmlElement = document.documentElement;
+
+    // Remove all theme classes
+    htmlElement.classList.remove('pf-v6-theme-dark', 'pf-v6-theme-unified');
+
+    // Apply theme
+    if (theme === 'unified') {
+      htmlElement.classList.add('pf-v6-theme-unified');
+    }
+
+    // Apply color scheme
+    let shouldBeDark = false;
+    if (colorScheme === 'dark') {
+      shouldBeDark = true;
+    } else if (colorScheme === 'system') {
+      shouldBeDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+
+    if (shouldBeDark) {
+      htmlElement.classList.add('pf-v6-theme-dark');
+    }
+
+    // Apply contrast mode as data attribute
+    htmlElement.setAttribute('data-contrast-mode', contrastMode);
+
+    // Store preferences
+    localStorage.setItem('pf-theme', theme);
+    localStorage.setItem('pf-color-scheme', colorScheme);
+    localStorage.setItem('pf-contrast-mode', contrastMode);
+  }, [theme, colorScheme, contrastMode]);
+
+  const onUserDropdownToggle = () => {
+    setIsUserDropdownOpen(!isUserDropdownOpen);
+  };
+
+  const onUserDropdownSelect = () => {
+    setIsUserDropdownOpen(false);
+  };
+
+  const userDropdownItems = (
+    <DropdownList>
+      <DropdownItem key="settings">
+        <CogIcon /> Settings
+      </DropdownItem>
+      <DropdownItem key="help">
+        <HelpIcon /> Help
+      </DropdownItem>
+      <DropdownItem key="logout">
+        Sign out
+      </DropdownItem>
+    </DropdownList>
+  );
+
+  const themeDropdownItems = (
+    <DropdownList>
+      <DropdownItem key="theme-label" isDisabled>
+        <strong>Theme</strong>
+      </DropdownItem>
+      <DropdownItem key="default" onClick={() => setTheme('default')}>
+        {theme === 'default' ? '✓ ' : ''}Default
+      </DropdownItem>
+      <DropdownItem key="unified" onClick={() => setTheme('unified')}>
+        {theme === 'unified' ? '✓ ' : ''}Unified
+      </DropdownItem>
+      <DropdownItem key="divider1" isDivider />
+      <DropdownItem key="color-label" isDisabled>
+        <strong>Color scheme</strong>
+      </DropdownItem>
+      <DropdownItem key="system" onClick={() => setColorScheme('system')}>
+        {colorScheme === 'system' ? '✓ ' : ''}System
+      </DropdownItem>
+      <DropdownItem key="light" onClick={() => setColorScheme('light')}>
+        {colorScheme === 'light' ? '✓ ' : ''}Light
+      </DropdownItem>
+      <DropdownItem key="dark" onClick={() => setColorScheme('dark')}>
+        {colorScheme === 'dark' ? '✓ ' : ''}Dark
+      </DropdownItem>
+      <DropdownItem key="divider2" isDivider />
+      <DropdownItem key="contrast-label" isDisabled>
+        <strong>Contrast mode</strong>
+      </DropdownItem>
+      <DropdownItem key="contrast-system" onClick={() => setContrastMode('system')}>
+        {contrastMode === 'system' ? '✓ ' : ''}System
+      </DropdownItem>
+      <DropdownItem key="contrast-default" onClick={() => setContrastMode('default')}>
+        {contrastMode === 'default' ? '✓ ' : ''}Default
+      </DropdownItem>
+      <DropdownItem key="high-contrast" onClick={() => setContrastMode('high-contrast')}>
+        {contrastMode === 'high-contrast' ? '✓ ' : ''}High contrast
+      </DropdownItem>
+      <DropdownItem key="glass" onClick={() => setContrastMode('glass')}>
+        {contrastMode === 'glass' ? '✓ ' : ''}Glass
+      </DropdownItem>
+    </DropdownList>
+  );
+
+  const headerToolbar = (
+    <Toolbar id="masthead-toolbar" isFullHeight isStatic>
+      <ToolbarContent>
+        <ToolbarGroup
+          align={{ default: 'alignEnd' }}
+          spacer={{ default: 'spacerNone', md: 'spacerMd' }}
+        >
+          <ToolbarItem>
+            <Dropdown
+              isOpen={isThemeMenuOpen}
+              onOpenChange={(isOpen: boolean) => setIsThemeMenuOpen(isOpen)}
+              popperProps={{ position: 'bottom-end' }}
+              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                <MenuToggle
+                  ref={toggleRef}
+                  onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
+                  isExpanded={isThemeMenuOpen}
+                  variant="plain"
+                  aria-label="Theme settings"
+                >
+                  {colorScheme === 'dark' || (colorScheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) ? <SunIcon /> : <MoonIcon />}
+                </MenuToggle>
+              )}
+            >
+              {themeDropdownItems}
+            </Dropdown>
+          </ToolbarItem>
+          <ToolbarItem>
+            <Dropdown
+              isOpen={isUserDropdownOpen}
+              onSelect={onUserDropdownSelect}
+              onOpenChange={(isOpen: boolean) => setIsUserDropdownOpen(isOpen)}
+              popperProps={{ position: 'right' }}
+              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                <MenuToggle
+                  ref={toggleRef}
+                  onClick={onUserDropdownToggle}
+                  isExpanded={isUserDropdownOpen}
+                  variant="plain"
+                  aria-label="User menu"
+                >
+                  <Avatar src="https://www.patternfly.org/assets/images/img_avatar.svg" alt="User avatar" />
+                </MenuToggle>
+              )}
+            >
+              {userDropdownItems}
+            </Dropdown>
+          </ToolbarItem>
+        </ToolbarGroup>
+      </ToolbarContent>
+    </Toolbar>
+  );
+
   const masthead = (
     <Masthead>
       <MastheadMain>
-        <MastheadToggle>
-          <Button
-            icon={<BarsIcon />}
-            variant="plain"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            aria-label="Global navigation"
-          />
-        </MastheadToggle>
         <MastheadBrand data-codemods>
           <MastheadLogo data-codemods>
             <svg height="40px" viewBox="0 0 679 158">
@@ -83,46 +246,10 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
           </MastheadLogo>
         </MastheadBrand>
       </MastheadMain>
+      <MastheadContent>
+        {headerToolbar}
+      </MastheadContent>
     </Masthead>
-  );
-
-  const location = useLocation();
-
-  const renderNavItem = (route: IAppRoute, index: number) => (
-    <NavItem key={`${route.label}-${index}`} id={`${route.label}-${index}`} isActive={route.path === location.pathname}>
-      <NavLink
-        to={route.path}
-      >
-        {route.label}
-      </NavLink>
-    </NavItem>
-  );
-
-  const renderNavGroup = (group: IAppRouteGroup, groupIndex: number) => (
-    <NavExpandable
-      key={`${group.label}-${groupIndex}`}
-      id={`${group.label}-${groupIndex}`}
-      title={group.label}
-      isActive={group.routes.some((route) => route.path === location.pathname)}
-    >
-      {group.routes.map((route, idx) => route.label && renderNavItem(route, idx))}
-    </NavExpandable>
-  );
-
-  const Navigation = (
-    <Nav id="nav-primary-simple">
-      <NavList id="nav-list-simple">
-        {routes.map(
-          (route, idx) => route.label && (!route.routes ? renderNavItem(route, idx) : renderNavGroup(route, idx)),
-        )}
-      </NavList>
-    </Nav>
-  );
-
-  const Sidebar = (
-    <PageSidebar>
-      <PageSidebarBody>{Navigation}</PageSidebarBody>
-    </PageSidebar>
   );
 
   const pageId = 'primary-app-container';
@@ -143,7 +270,6 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
     <Page
       mainContainerId={pageId}
       masthead={masthead}
-      sidebar={sidebarOpen && Sidebar}
       skipToContent={PageSkipToContent}
     >
       {children}

@@ -5,6 +5,7 @@ import { Support } from '@app/Support/Support';
 import { GeneralSettings } from '@app/Settings/General/GeneralSettings';
 import { ProfileSettings } from '@app/Settings/Profile/ProfileSettings';
 import { NotFound } from '@app/NotFound/NotFound';
+import { ButtonExample } from '@app/Button/ButtonExample';
 
 export interface IAppRoute {
   label?: string; // Excluding the label will exclude the route from the nav sidebar in AppLayout
@@ -31,6 +32,13 @@ const routes: AppRouteConfig[] = [
     label: 'Dashboard',
     path: '/',
     title: 'PatternFly Seed | Main Dashboard',
+  },
+  {
+    element: <ButtonExample />,
+    exact: true,
+    label: 'Button Examples',
+    path: '/buttons',
+    title: 'PatternFly Seed | Button Examples',
   },
   {
     element: <Support />,
